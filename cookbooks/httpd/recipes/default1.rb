@@ -6,31 +6,19 @@
 #
 # All rights reserved - Do Not Redistribute
 
-#include_recipe 'firewalld'
-#include_recipe 'ufw'
-#include_recipe 'iptables'
-
-case node["platform_family"]
-when "debian"
+if node.attribute?('platform_family')=='debian'
    apache_package="apache2"
    pkg_firewall="ufw"
-
-   include_recipe 'ufw'
-   package 'ufw' do
+   
+   package ufw do
         action :install
    end
-
-   firewall_rule 'http' do
-     action :allow
-   end
-
-when "rhel"
+   
+else
    apache_package="httpd"
-   if node['platform_family']=='rhel' and node['platform_version'] =~ /^7/
-     include_recipe 'firewalld'
+   if node.attribute?('platform_family')=='rhel' and node.attribute?('platform_version')=~ /^7/
      pkg_firewall="firewalld"
    else
-     include_recipe 'iptables'
      pkg_firewall="iptables"
    end
 
@@ -41,14 +29,10 @@ when "rhel"
    service pkg_firewall do
      action [:start, :enable]
    end
-
-   if node['platform_family']=='rhel' and node['platform_version'] =~ /^7/
+   
+   if node.attribute?('platform_family')=='rhel' and node.attribute?('platform_version')=~ /^7/
      firewalld_service 'http'
-   else
-     iptables_rule "http"
-     iptables_rule "ssh"
    end
-
 end
 
 package apache_package do
